@@ -1,152 +1,98 @@
-# SCA: Saudi Codes Assistant
+# 🎨 Canva Template → HTML/CSS Generator
 
-SCA (Saudi Codes Assistant) is an advanced AI-powered system designed to assist users with inquiries related to Saudi Arabian codes and regulations. This project leverages Retrieval-Augmented Generation (RAG) to provide accurate and contextually relevant information by combining large language models (LLMs) with a robust knowledge base of Saudi codes.
+Convert your Canva designs into production-ready, responsive HTML/CSS using AI-powered analysis.
 
-## Key Features
+## 📋 Table of Contents
 
-*   **Intelligent Information Retrieval:** Quickly find answers to complex questions about Saudi codes.
-*   **Contextual Understanding:** Utilizes RAG to provide highly relevant and accurate responses.
-*   **Extensible Architecture:** Designed with modular components for easy expansion to new domains (e.g., electricity, plumbing).
-*   **Multimodal Capabilities:** Supports both text-based and vision-based queries, allowing for analysis of images related to codes (e.g., electrical diagrams, plumbing schematics).
+- [Features](#-features)
+- [How It Works](#-how-it-works)
+- [Configuration](#-configuration)
+- [Project Structure](#-project-structure)
+- [Technology Stack](#-technology-stack)
+- [Optimization](#-optimization)
+- [Use Cases](#-use-cases)
 
-## Technical Architecture
+## ✨ Features
 
-The SCA system is built with a modular and scalable architecture, primarily using Python. It integrates various components to achieve its RAG capabilities:
+- **AI Design Analysis**: Extracts layout, colors, fonts, and visual elements.
+- **Base64 Embedding**: All images embedded in one HTML file.
+- **Responsive CSS**: Mobile-friendly layouts using Flexbox/Grid.
+- **Accessibility Ready**: Semantic HTML and ARIA support.
+- **Smart Image Placement**: Matches uploaded images contextually.
+- **Multi-Provider Support**: Works with OpenRouter or Google Gemini.
+- **Single File Output**: Self-contained, production-ready HTML.
 
-*   **Orchestrator:** The central component (`orchestrator.py`, `simple_orchestrator.py`) that manages the flow of information, routing queries to appropriate handlers and integrating responses from different services.
-*   **Handlers:** Domain-specific modules (`handlers/electricity_handler.py`, `handlers/plumbing_handler.py`) that process queries related to specific code categories. These handlers interact with the RAG engine and LLM models.
-*   **LLM Models:** Manages the interaction with large language models (`llm/llm_text_model.py`, `llm/llm_vision_model.py`) for natural language understanding and generation, as well as vision-based processing.
-*   **Services:** Provides core functionalities such as embedding generation, image analysis, and vector store management (`services/embedding_provider.py`, `services/image_analyzer.py`, `services/rag_engine.py`, `services/vector_store_builder.py`).
-*   **Data Management:** Stores and organizes the Saudi codes knowledge base, including vector stores for efficient retrieval (`data/db`, `data/saudi_codes`).
-*   **Utilities:** Helper functions and scripts for various tasks, including building vector stores (`utils/llm_models_utils.py`, `scripts/build_all_vector_stores.py`).
+## 🔄 How It Works
 
-### Technologies Used
+1.  **Upload Design**: AI analyzes the Canva layout.
+2.  **Extract Elements**: Detects colors, fonts, structure, and images.
+3.  **Generate HTML/CSS**: Produces semantic, responsive code.
+4.  **Embed Images**: Converts assets to Base64.
+5.  **Output**: One complete `.html` file ready to deploy.
 
-*   **Python:** The primary programming language for the entire system.
-*   **Langchain:** Used for building and managing the RAG pipeline, including `langchain-core` and `langchain-community`.
-*   **ChromaDB:** A vector database used for storing and retrieving document embeddings.
-*   **Sentence Transformers:** For generating embeddings from text.
-*   **Requests:** For making HTTP requests.
-*   **PyPDF:** For parsing PDF documents.
-*   **Python-dotenv:** For managing environment variables.
-*   **Other potential libraries:** Depending on the specific LLM and vision models used, additional libraries might be required (e.g., for image processing, specific LLM APIs).
+## ⚙️ Configuration
 
-## Getting Started
+Edit `config.py` to adjust model and output settings:
 
-To set up and run the SCA project locally, follow these steps:
-
-### Prerequisites
-
-Make sure you have the following installed:
-
-*   Python 3.8+
-*   Git
-
-### Installation
-
-1.  **Clone the repository:**
-
-    ```bash
-    git clone https://github.com/galall10/SCA.git
-    cd SCA
-    ```
-
-2.  **Create a virtual environment (recommended):**
-
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-    ```
-
-3.  **Install dependencies:**
-
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Prepare your environment variables:**
-
-    Create a `.env` file in the root directory of the project and add necessary API keys and configurations. For example:
-
-    ```
-    OPENAI_API_KEY=your_openai_api_key
-    # Add other API keys or configurations as needed for your LLM and vision models
-    ```
-
-5.  **Build Vector Stores:**
-
-    To enable the RAG functionality, you need to build the vector stores from your code documents. Run the script:
-
-    ```bash
-    python scripts/build_all_vector_stores.py
-    ```
-
-    Ensure your code documents are placed in the `data/saudi_codes` directory, organized by category (e.g., `data/saudi_codes/electricity`).
-
-### Running the Application
-
-To run the main application, execute `app.py`:
-
-```bash
-python app.py
+```python
+OPENROUTER_MODEL = "qwen/qwen2.5-vl-72b-instruct:free"
+GEMINI_MODEL = "gemini-2.0-flash-exp"
+OUTPUT_FOLDER = BASE_DIR / "output"
+MAX_ITERATIONS = 2
 ```
 
-This will typically start a web service or an interactive console where you can interact with the SCA.
-
-## Project Structure
+## 📁 Project Structure
 
 ```
-SCA/
-├── app.py                  # Main application entry point
-├── config.py               # Configuration settings
-├── orchestrator.py         # Core logic for query orchestration
-├── simple_orchestrator.py  # Simplified orchestrator (if applicable)
-├── requirements.txt        # Python dependencies
-├── test_RAG.py             # Tests for RAG functionality
-├── .env                    # Environment variables (not committed)
-├── data/
-│   ├── db/                 # Vector stores (e.g., ChromaDB)
-│   │   └── electricity/
-│   └── saudi_codes/        # Raw Saudi code documents
-│       └── electricity/
-├── handlers/               # Domain-specific query handlers
-│   ├── base_handler.py
-│   ├── electricity_handler.py
-│   └── plumbing_handler.py
-├── llm/                    # Large Language Model integrations
-│   ├── llm_text_model.py
-│   └── llm_vision_model.py
-├── scripts/                # Utility scripts
-│   └── build_all_vector_stores.py
-├── services/               # Core services for RAG and AI
-│   ├── embedding_provider.py
-│   ├── handler_factory.py
-│   ├── image_analyzer.py
-│   ├── image_validator.py
-│   ├── rag_engine.py
-│   └── vector_store_builder.py
-└── utils/                  # General utility functions
-    └── llm_models_utils.py
+canva-to-html-generator/
+├── agents/ # AI workflow nodes
+├── models/ # State management
+├── prompts/ # Prompt templates
+├── services/ # Code generation logic
+├── ui/ # Gradio interface
+├── utils/ # Image & LLM utilities
+├── output/ # Generated files
+├── config.py
+├── main.py
+├── requirements.txt
+└── README.md
 ```
 
-## Contributing
+## 🛠️ Technology Stack
 
-We welcome contributions to the SCA project! If you'd like to contribute, please follow these steps:
+**Core Frameworks:**
 
-1.  Fork the repository.
-2.  Create a new branch (e.g., `feature/add-new-domain`).
-3.  Make your changes and ensure they adhere to the project's coding standards.
-4.  Write and run tests for your changes.
-5.  Commit your changes with a clear and descriptive message.
-6.  Push your branch to your forked repository.
-7.  Open a Pull Request to the `main` branch of the original repository.
+-   [LangGraph](https://langchain.github.io/langgraph/): AI workflow orchestration.
+-   [LangChain](https://www.langchain.com/): LLM integration.
+-   [Gradio](https://www.gradio.app/): Web UI interface.
 
-## License
+**AI Providers:**
 
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+-   OpenRouter (Qwen)
+-   Google Gemini
 
-## Contact
+**Image Processing:**
 
-For any questions or suggestions, please open an issue in the GitHub repository or contact the repository owner.
+-   Pillow (PIL)
+-   Base64 embedding
 
+**Python Libraries:**
 
+-   `dotenv`: Environment management.
+-   `pydantic`: Data validation.
+
+## ⚡ Optimization
+
+-   Two-phase image handling for minimal token use.
+-   Recommended: images under 500 KB.
+-   **Gemini**: Faster and high-quality.
+-   **OpenRouter**: Free and flexible.
+-   Cached results for similar designs.
+
+## 🎯 Use Cases
+
+-   Landing pages & portfolios
+-   Email templates
+-   App mockups
+-   Styled reports
+-   Educational materials
