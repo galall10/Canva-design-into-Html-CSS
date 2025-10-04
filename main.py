@@ -8,10 +8,14 @@ def main():
     """Launch the Gradio interface"""
     print("=" * 50)
     print("Canva Template to HTML/CSS Generator")
+    print("Self-Contained Version (Base64 Images)")
     print("=" * 50)
-    print(f"OpenRouter API Key: {' Set' if config.OPENROUTER_API_KEY else ' Not Set'}")
-    print(f"Gemini API Key: {' Set' if config.GEMINI_API_KEY else ' Not Set'}")
-    print(f"Images Folder: {config.LOCAL_IMAGES_FOLDER}")
+    print(f"OpenRouter API Key: {'Set' if config.OPENROUTER_API_KEY else 'Not Set'}")
+    print(f"Gemini API Key: {'Set' if config.GEMINI_API_KEY else 'Not Set'}")
+    print(f"Output Folder: {config.OUTPUT_FOLDER}")
+    print("=" * 50)
+    print("Images will be embedded as base64 (no external files)")
+    print("=" * 50)
 
     demo = create_ui()
     demo.launch(

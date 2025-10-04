@@ -5,12 +5,12 @@ import json
 from langchain_core.messages import HumanMessage, SystemMessage
 from models.state import AgentState
 from utils.llm_factory import initialize_llm
-from utils.image_utils import get_local_images
+from utils.image_utils import get_next_user_image_placeholder
 from prompts.templates import *
 
 def analyze_design_node(state: AgentState) -> AgentState:
     """Analyze the design template and extract key elements including images"""
-    progress_msg = "🔍 Analyzing design template...\n"
+    progress_msg = "Analyzing design template...\n"
     state["progress_log"] = state.get("progress_log", "") + progress_msg
 
     image_data = state.get("image_base64", "")
@@ -26,14 +26,14 @@ def analyze_design_node(state: AgentState) -> AgentState:
     ])
 
     state["design_analysis"] = response.content
-    state["messages"].append("✅ Design analysis complete")
-    state["progress_log"] += "✅ Design analysis complete\n"
+    state["messages"].append("Design analysis complete")
+    state["progress_log"] += "Design analysis complete\n"
 
     return state
 
 def extract_design_elements_node(state: AgentState) -> AgentState:
     """Extract specific design elements including images"""
-    progress_msg = "🎨 Extracting design elements and assigning local images...\n"
+    progress_msg = "Extracting design elements and preparing image slots...\n"
     state["progress_log"] += progress_msg
 
     api_provider = state.get("api_provider", "openrouter")
@@ -63,16 +63,13 @@ def extract_design_elements_node(state: AgentState) -> AgentState:
         state["typography"] = elements.get("typography", {})
         state["layout_structure"] = elements.get("layout", {})
 
-        # Process detected images and assign local image paths
+        # Process detected images and assign placeholder tokens (NOT base64!)
         images_detected = elements.get("images", [])
-        used_images = set()
+        user_images_count = state.get("user_images_count", 0)
 
-        for img in images_detected:
-            img_type = img.get("type", "general")
-            from utils.image_utils import get_local_image_path
-            img["url"] = get_local_image_path(img_type, used_images)
-            if img["url"].startswith("./images/"):
-                used_images.add(img["url"].split("/")[-1])
+        for idx, img in enumerate(images_detected):
+            # Use lightweight placeholder token instead of heavy base64
+            img["url"] = get_next_user_image_placeholder(idx, idx, user_images_count)
 
         state["images_detected"] = images_detected
 
@@ -94,14 +91,14 @@ def extract_design_elements_node(state: AgentState) -> AgentState:
             "images_detected": []
         })
 
-    state["messages"].append("✅ Design elements extracted")
-    state["progress_log"] += f"✅ Design elements extracted ({len(state['images_detected'])} images assigned)\n"
+    state["messages"].append("Design elements extracted")
+    state["progress_log"] += f"Design elements extracted ({len(state['images_detected'])} image slots prepared)\n"
 
     return state
 
 def generate_html_node(state: AgentState) -> AgentState:
-    """Generate semantic HTML structure with local image paths"""
-    progress_msg = "📝 Generating HTML structure with local images...\n"
+    """Generate semantic HTML structure with image placeholder tokens"""
+    progress_msg = "Generating HTML structure with image placeholders...\n"
     state["progress_log"] += progress_msg
 
     api_provider = state.get("api_provider", "openrouter")
@@ -114,7 +111,7 @@ def generate_html_node(state: AgentState) -> AgentState:
 Design Analysis: {state['design_analysis']}
 Layout Structure: {json.dumps(state['layout_structure'], indent=2)}
 
-IMAGES TO INCLUDE (use these exact paths):
+IMAGES TO INCLUDE (use placeholder tokens):
 {images_info}
 
 Requirements:
@@ -123,16 +120,17 @@ Requirements:
 - Create a responsive structure
 - Use meaningful class names following BEM methodology
 - Include all text content visible in the original design
-- **IMPORTANT**: For each image detected, use the provided URL in an <img> tag with proper alt text
+- **IMPORTANT**: For each image, use the placeholder token from the "url" field in the src attribute
+  Example: <img src="{{{{USER_IMAGE_0}}}}" alt="Description">
+- DO NOT try to generate actual base64 data - just use the placeholder tokens exactly as provided
 - Structure should match the Canva template exactly
 - DO NOT include any CSS in this response
-- Use the exact image paths provided (e.g., ./images/filename.jpg)
 
 Generate ONLY the HTML code structure, no explanations. Start with <!DOCTYPE html> and include a <head> section with meta tags."""
 
     messages = [
         SystemMessage(content=html_prompt),
-        HumanMessage(content="Generate the HTML structure now with local image paths.")
+        HumanMessage(content="Generate the HTML structure now with image placeholder tokens.")
     ]
 
     response = llm.invoke(messages)
@@ -144,15 +142,15 @@ Generate ONLY the HTML code structure, no explanations. Start with <!DOCTYPE htm
         html_content = html_content.split("```")[1].split("```")[0].strip()
 
     state["html_code"] = html_content
-    state["messages"].append("✅ HTML generated with local images")
-    state["progress_log"] += "✅ HTML generated with local images\n"
+    state["messages"].append("HTML generated with image placeholders")
+    state["progress_log"] += "HTML generated with image placeholders\n"
 
     return state
 
 
 def generate_css_node(state: AgentState) -> AgentState:
     """Generate CSS styling"""
-    progress_msg = "🎨 Generating CSS styles...\n"
+    progress_msg = "Generating CSS styles...\n"
     state["progress_log"] += progress_msg
 
     api_provider = state.get("api_provider", "openrouter")
@@ -200,14 +198,14 @@ Generate ONLY the CSS code (without <style> tags), no explanations."""
     css_content = css_content.replace("<style>", "").replace("</style>", "").strip()
 
     state["css_code"] = css_content
-    state["messages"].append("✅ CSS generated")
-    state["progress_log"] += "✅ CSS generated\n"
+    state["messages"].append("CSS generated")
+    state["progress_log"] += "CSS generated\n"
 
     return state
 
 
 def combine_code_node(state: AgentState) -> AgentState:
-    """Combine HTML and CSS into a complete file"""
+    """Combine HTML and CSS into a complete self-contained file"""
     progress_msg = "🔧 Combining HTML and CSS...\n"
     state["progress_log"] += progress_msg
 
@@ -234,8 +232,8 @@ def combine_code_node(state: AgentState) -> AgentState:
 </html>"""
 
     state["html_code"] = html
-    state["messages"].append("✅ Code combined")
-    state["progress_log"] += "✅ Code combined\n"
+    state["messages"].append("Code combined")
+    state["progress_log"] += "Code combined (fully self-contained)\n"
 
     return state
 
@@ -256,10 +254,10 @@ Current Code:
 Original Design Analysis:
 {state['design_analysis']}
 
-Images Used: {len(state.get('images_detected', []))} local images
+Images: {len(state.get('images_detected', []))} image placeholders (will be replaced with base64 later)
 
 Tasks:
-1. Verify all visual elements are present including images
+1. Verify all visual elements are present including image placeholders
 2. Check color accuracy against the original design
 3. Ensure images are properly styled and responsive
 4. Ensure responsive behavior
@@ -267,7 +265,8 @@ Tasks:
 6. Fix any alignment or spacing issues
 7. Add any missing hover states or interactions
 8. Ensure the design looks modern and professional
-9. Keep local image paths intact (./images/filename.ext)
+9. Keep image placeholder tokens intact ({{{{USER_IMAGE_X}}}})
+10. DO NOT try to generate actual base64 data
 
 Provide the refined COMPLETE HTML file (with embedded CSS) that's production-ready. Make sure it closely matches the original Canva template design."""
 
@@ -288,14 +287,21 @@ Provide the refined COMPLETE HTML file (with embedded CSS) that's production-rea
         state["html_code"] = refined_code
 
     state["iteration_count"] = state.get("iteration_count", 0) + 1
-    state["messages"].append("✅ Code refined")
-    state["progress_log"] += "✅ Code refined and optimized\n"
+    state["messages"].append("Code refined")
+    state["progress_log"] += "Code refined and optimized\n"
 
     return state
 
 def output_node(state: AgentState) -> AgentState:
-    """Final output node"""
-    state["messages"].append("✅ Generation complete!")
-    state["progress_log"] += "✅ Generation complete!\n"
-    return state
+    """Final output node - replace placeholders with actual base64"""
+    state["messages"].append("Embedding base64 images...")
+    state["progress_log"] += "Replacing placeholders with base64 images...\n"
 
+    # NOW we replace the lightweight placeholders with actual base64 data
+    from utils.image_utils import replace_image_placeholders
+    user_images_base64 = state.get("user_images_base64", {})
+    state["html_code"] = replace_image_placeholders(state["html_code"], user_images_base64)
+
+    state["messages"].append("Generation complete!")
+    state["progress_log"] += "Generation complete! HTML file is fully self-contained.\n"
+    return state

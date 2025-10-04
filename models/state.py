@@ -19,4 +19,5 @@ class AgentState(TypedDict):
     messages: Annotated[List[str], operator.add]
     progress_log: str
     api_provider: str
-    local_images: List[str]
+    user_images_base64: Dict[str, str]  # filename: base64 data URI (stored separately, not in LLM context)
+    user_images_count: int  # Just the count for LLM to know how many images available

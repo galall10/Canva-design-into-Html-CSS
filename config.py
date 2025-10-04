@@ -13,16 +13,14 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 # Model Configuration
-OPENROUTER_MODEL = "x-ai/grok-4-fast:free"
+OPENROUTER_MODEL = "meta-llama/llama-4-maverick:free"
 GEMINI_MODEL = "gemini-2.0-flash-exp"
 
 # Path Configuration
 BASE_DIR = Path(__file__).parent
-LOCAL_IMAGES_FOLDER = BASE_DIR / "images"
 OUTPUT_FOLDER = BASE_DIR / "output"
 
 # Create necessary directories
-LOCAL_IMAGES_FOLDER.mkdir(exist_ok=True)
 OUTPUT_FOLDER.mkdir(exist_ok=True)
 
 # Application Settings
